@@ -42,7 +42,24 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
+const initializeDatabase = require('./scripts/initDatabase');
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    // In production, execute the database initialization script automatically
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🚀 Production environment detected. Initializing database...');
+      await initializeDatabase();
+    }
+  } catch (err) {
+    console.error('❌ Failed to initialize database:', err);
+    // Proceeding might be risky if DB isn't ready, but we'll try running the server anyway
+    // OR process.exit(1) to make Render restart.
+  }
+
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+};
+
+startServer();
